@@ -42,4 +42,16 @@ class ListsTest {
         Assertions.assertEquals("a", s.reduce(fun))
         Assertions.assertEquals("abca", l.reduce(fun))
     }
+
+    @Test
+    def testTakeRight(): Unit = {
+        val l = List("a", "b", "c", "a")
+        val bigger = 5
+        val n = 2
+        Assertions.assertEquals(l, l.takeRight(bigger))
+        Assertions.assertEquals(List.nil, l.takeRight(0))
+        Assertions.assertEquals(List("c", "a"), l.takeRight(n))
+        Assertions.assertEquals(List.nil, List.nil.takeRight(0))
+        Assertions.assertEquals(List.nil, List.nil.takeRight(n))
+    }
 }
