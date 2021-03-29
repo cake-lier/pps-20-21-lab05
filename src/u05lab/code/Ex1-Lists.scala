@@ -147,14 +147,12 @@ trait ListImplementation[A] extends List[A] {
   }
 
   override def takeRight(n: Int): List[A] = {
-    def _takeRight(l: List[A]): (List[A], Int) = l match {
-      case h :: t => _takeRight(t) match {
-        case (e, r) if r < n => (h :: e, r + 1)
-        case x => x
-      }
-      case _ => (nil, 0)
+    @tailrec
+    def _drop(l: List[A])(k: Int): List[A] = l match {
+      case _ :: t if k > 0 => _drop(t)(k - 1)
+      case e => e
     }
-    _takeRight(this)._1
+    _drop(this)(this.foldLeft(0)((n, _) => n + 1) - n)
   }
 }
 
