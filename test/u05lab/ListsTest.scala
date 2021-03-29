@@ -32,4 +32,14 @@ class ListsTest {
         Assertions.assertEquals((List.nil, l), l.span(alwaysPred))
         Assertions.assertEquals((l, List.nil), l.span(!alwaysPred(_)))
     }
+
+    @Test
+    def testReduce(): Unit = {
+        val s = List("a")
+        val l = List("a", "b", "c", "a")
+        val fun: (String, String) => String = _ + _
+        Assertions.assertThrows(classOf[UnsupportedOperationException], () => List.nil.reduce(fun))
+        Assertions.assertEquals("a", s.reduce(fun))
+        Assertions.assertEquals("abca", l.reduce(fun))
+    }
 }
