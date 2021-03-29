@@ -62,7 +62,6 @@ object :: {
 
 // List algorithms
 trait ListImplementation[A] extends List[A] {
-
   override def head: Option[A] = this match {
     case h :: _ => Some(h)
     case _ => None
@@ -115,10 +114,12 @@ trait ListImplementation[A] extends List[A] {
     case Nil() => Nil()
   }
 
+  import u05lab.code.List.nil
+
   override def zipRight: List[(A, Int)] = {
     def _zipRight(l: List[A], n: Int): List[(A, Int)] = l match {
       case h :: t => (h, n) :: _zipRight(t, n + 1)
-      case _ => Nil()
+      case _ => nil
     }
     _zipRight(this, 0)
   }
