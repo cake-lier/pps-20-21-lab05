@@ -62,29 +62,30 @@ object ExamsManager {
     private case class ExamsManagerImpl() extends ExamsManager {
         private var calls: Map[String, Map[String, ExamResult]] = Map()
 
-        override def createNewCall(call: String): Unit = call match {
-            case c if this.calls.contains(c) => throw new IllegalArgumentException
-            case _ => this.calls += call -> Map()
-        }
+        override def createNewCall(call: String): Unit
+            = if (this.calls.contains(call)) {
+                throw new IllegalArgumentException
+            } else {
+                this.calls += call -> Map()
+            }
 
-        override def addStudentResult(call: String, student: String, result: ExamResult): Unit = (call, student) match {
-            case (c, s) if this.calls(c).contains(s) => throw new IllegalArgumentException
-            case _ => this.calls += call -> (this.calls(call) + (student -> result))
-        }
+        override def addStudentResult(call: String, student: String, result: ExamResult): Unit
+            = if (this.calls(call).contains(student)) {
+                throw new IllegalArgumentException
+            } else {
+                this.calls += call -> (this.calls(call) + (student -> result))
+            }
 
         override def getAllStudentsFromCall(call: String): Set[String] = this.calls(call).keySet
 
         override def getEvaluationsMapFromCall(call: String): Map[String, Int]
-            = this.calls(call).filter(e => e._2.evaluation.isDefined).map(e => (e._1, e._2.evaluation.get))
+            = this.calls(call).filter(_._2.evaluation.isDefined).map(e => (e._1, e._2.evaluation.get))
 
         override def getResultsMapFromStudent(student: String): Map[String, String]
-            = this.calls.flatMap(e => e._2.map(ei => (e._1, ei._1, ei._2.toString)))
-                        .filter(t => t._2 == student)
-                        .map(t => (t._1, t._3))
-                        .toMap
+            = this.calls.flatMap(e => e._2.filter(_._1 == student).map(c => (e._1, c._2.toString)))
 
         override def getBestResultFromStudent(student: String): Option[Int]
-            = this.calls.values.flatten.filter(e => e._1 == student).map(_._2).map(_.evaluation).max
+            = this.calls.values.flatten.filter(_._1 == student).map(_._2).map(_.evaluation).max
     }
 
     def apply(): ExamsManager = ExamsManagerImpl()
