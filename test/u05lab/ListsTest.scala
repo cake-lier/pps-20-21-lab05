@@ -21,4 +21,15 @@ class ListsTest {
         Assertions.assertEquals((List.nil, l), l.partition(alwaysPred))
         Assertions.assertEquals((l, List.nil), l.partition(!alwaysPred(_)))
     }
+
+    @Test
+    def testSpan(): Unit = {
+        val l = List("a", "b", "c", "a")
+        val pred = "a" == _
+        val alwaysPred = "z" == _
+        Assertions.assertEquals((List.nil, List.nil), List.nil.span(pred))
+        Assertions.assertEquals((List("a"), List("b", "c", "a")), l.span(pred))
+        Assertions.assertEquals((List.nil, l), l.span(alwaysPred))
+        Assertions.assertEquals((l, List.nil), l.span(!alwaysPred(_)))
+    }
 }
