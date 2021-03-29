@@ -54,4 +54,22 @@ class ListsTest {
         Assertions.assertEquals(List.nil, List.nil.takeRight(0))
         Assertions.assertEquals(List.nil, List.nil.takeRight(n))
     }
+
+    @Test
+    def testCollect(): Unit = {
+        val l = List("a", "b", "c", "a")
+        val fun: PartialFunction[String, Int] = {
+            case x if "a" == x => 0
+        }
+        val neverFun: PartialFunction[String, Int] = {
+            case x if x == "z" => 0
+        }
+        val alwaysFun: PartialFunction[String, Int] = {
+            case x if x != "z" => 0
+        }
+        Assertions.assertEquals(List.nil, List.nil.collect(fun))
+        Assertions.assertEquals(List(0, 0), l.collect(fun))
+        Assertions.assertEquals(List.nil, l.collect(neverFun))
+        Assertions.assertEquals(l.map(_ => 0), l.collect(alwaysFun))
+    }
 }

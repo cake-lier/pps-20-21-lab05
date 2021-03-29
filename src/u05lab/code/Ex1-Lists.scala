@@ -39,6 +39,8 @@ sealed trait List[A] {
 
   def takeRight(n: Int): List[A]
 
+  def collect[B](fun: PartialFunction[A, B]): List[B]
+
   // right-associative construction: 10 :: 20 :: 30 :: Nil()
   def ::(head: A): List[A] = Cons(head,this)
 }
@@ -154,6 +156,11 @@ trait ListImplementation[A] extends List[A] {
     }
     _drop(this)(this.foldLeft(0)((n, _) => n + 1) - n)
   }
+
+  override def collect[B](fun: PartialFunction[A, B]): List[B] = this match {
+    case h :: t => fun.andThen(_ :: nil).applyOrElse[A, List[B]](h, _ => nil).append(t.collect(fun))
+    case _ => nil
+  }
 }
 
 // Factories
@@ -209,5 +216,5 @@ object ListsTest extends App {
   println(l.takeRight(2)) // Cons(30,Cons(40,Nil()))
 
   // Ex. 6: collect
-  // println(l.collect { case x if x<15 || x>35 => x-1 }) // Cons(9, Cons(39, Nil()))
+  println(l.collect { case x if x<15 || x>35 => x-1 }) // Cons(9, Cons(39, Nil()))
 }
