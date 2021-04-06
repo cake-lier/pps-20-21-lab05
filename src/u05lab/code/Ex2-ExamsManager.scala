@@ -41,7 +41,7 @@ object ExamResult {
 
     def succeeded(evaluation: Int): ExamResult = evaluation match {
         case v if v < 18 || v > 30 => throw new IllegalArgumentException
-        case _ => ExamResultImpl(Kind.SUCCEEDED, Option(evaluation), cumLaude = false)
+        case v => ExamResultImpl(Kind.SUCCEEDED, Option(v), cumLaude = false)
     }
 }
 
@@ -62,19 +62,15 @@ object ExamsManager {
     private case class ExamsManagerImpl() extends ExamsManager {
         private var calls: Map[String, Map[String, ExamResult]] = Map()
 
-        override def createNewCall(call: String): Unit
-            = if (this.calls.contains(call)) {
-                throw new IllegalArgumentException
-            } else {
-                this.calls += call -> Map()
-            }
+        override def createNewCall(call: String): Unit = call match {
+            case c if this.calls.contains(c) => throw new IllegalArgumentException
+            case c => this.calls += c -> Map()
+        }
 
-        override def addStudentResult(call: String, student: String, result: ExamResult): Unit
-            = if (this.calls(call).contains(student)) {
-                throw new IllegalArgumentException
-            } else {
-                this.calls += call -> (this.calls(call) + (student -> result))
-            }
+        override def addStudentResult(call: String, student: String, result: ExamResult): Unit = (call, student) match {
+            case (c, s) if this.calls(c).contains(s) => throw new IllegalArgumentException
+            case (c, s) => this.calls += c -> (this.calls(c) + (s -> result))
+        }
 
         override def getAllStudentsFromCall(call: String): Set[String] = this.calls(call).keySet
 
