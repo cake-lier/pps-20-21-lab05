@@ -1,7 +1,6 @@
 package u05lab.code
 
 import java.util.concurrent.TimeUnit
-
 import scala.concurrent.duration.FiniteDuration
 
 object PerformanceUtils {
@@ -18,8 +17,13 @@ object PerformanceUtils {
   }
 
   def measure[T](expr: => T): MeasurementResults[T] = measure("")(expr)
-}
 
+  def testMeasurements[T](value1: T, name1: String)
+                         (value2: T, name2: String)
+                         (checkOp: (MeasurementResults[_], MeasurementResults[_]) => Boolean)
+                         (testMeth: T => _, nameOp: String): Unit
+    = assert(checkOp(measure(name1 + " " + nameOp)(testMeth(value1)), measure(name2 + " " + nameOp)(testMeth(value2))))
+}
 
 object CollectionsTest extends App {
   /* Linear sequences: List, ListBuffer */
@@ -127,35 +131,44 @@ object CollectionsTest extends App {
   mutMap -= 15
   println(mutMap)
   println()
+
   /* Comparison */
   import PerformanceUtils._
+  //Sequences
   val lst = (1 to 1_000_000).toList
   val vec = (1 to 1_000_000).toVector
-  assert(measure("list last"){ lst.last } > measure("vector last"){ vec.last })
-  assert(measure("list apply"){ lst(500_000) } > measure("vector apply"){ vec(500_000) })
-  assert(measure("list append"){ lst :+ 0 } > measure("vector append"){ vec :+ 0 })
+  val testListSlowerThanVector: (Seq[Int] => _, String) => Unit
+    = testMeasurements[Seq[Int]](lst, "list")(vec, "vector")(_ > _)
+  testListSlowerThanVector(_.last, "last")
+  testListSlowerThanVector(_.apply(500_000), "apply")
+  testListSlowerThanVector(_.:+(0), "append")
   val arr = (1 to 1_000_000).toArray
-  assert(measure("list last"){ lst.last } > measure("array last"){ arr.last })
-  assert(measure("list apply"){ lst(500_000) } > measure("array apply") { arr(500_000) })
-  assert(measure("list prepend"){ 0 +: lst } < measure("array prepend"){ 0 +: arr })
-  assert(measure("vector tail"){ vec.tail } < measure("array tail"){ arr.tail })
-  assert(measure("vector prepend"){ 0 +: vec } < measure("array prepend"){ 0 +: arr })
-  assert(measure("vector append"){ vec :+ 0 } < measure("array append"){ arr :+ 0 })
-  println()
-  import scala.collection.immutable.HashSet
-  import scala.collection.immutable.TreeSet
+  val testListAndArray: ((MeasurementResults[_], MeasurementResults[_]) => Boolean) => (Seq[Int] => _, String) => Unit
+      = testMeasurements[Seq[Int]](lst, "list")(arr, "array")
+  testListAndArray(_ > _)(_.last, "last")
+  testListAndArray(_ > _)(_.apply(500_000), "apply")
+  testListAndArray(_ < _)(_.+:(0), "prepend")
+  val testArraySlowerThanVector: (Seq[Int] => _, String) => Unit
+    = testMeasurements[Seq[Int]](arr, "array")(vec, "vector")(_ > _)
+  testArraySlowerThanVector(_.tail, "tail")
+  testArraySlowerThanVector(_.+:(0), "prepend")
+  testArraySlowerThanVector(_.:+(0), "append")
+  //Sets
+  import scala.collection.immutable.{HashSet, TreeSet}
   val hashSet = HashSet(1 to 1_000_000: _*)
   val treeSet = TreeSet(1 to 1_000_000: _*)
-  assert(measure("hashSet lookup"){ hashSet.contains(1_000_000) }
-         < measure("treeSet lookup"){ treeSet.contains(1_000_000) })
-  assert(measure("hashSet add"){ hashSet + 0 } < measure("treeSet add"){ treeSet + 0 })
-  assert(measure("hashSet min"){ hashSet.min } > measure("treeSet min"){ treeSet.min })
-  import scala.collection.immutable.HashMap
-  import scala.collection.immutable.TreeMap
+  val testHashSetAndTreeSet: ((MeasurementResults[_], MeasurementResults[_]) => Boolean) => (Set[Int] => _, String) => Unit
+    = testMeasurements[Set[Int]](hashSet, "hashSet")(treeSet, "treeSet")
+  testHashSetAndTreeSet(_ < _)(_.contains(1_000_000), "lookup")
+  testHashSetAndTreeSet(_ < _)(_.+(0), "add")
+  testHashSetAndTreeSet(_ > _)(_.min, "min")
+  // Maps
+  import scala.collection.immutable.{HashMap, TreeMap}
   val hashMap = HashMap((1 to 1_000_000).zipWithIndex: _*)
   val treeMap = TreeMap((1 to 1_000_000).zipWithIndex: _*)
-  assert(measure("hashMap lookup"){ hashMap.contains(1_000_000) }
-         < measure("treeMap lookup"){ treeMap.contains(1_000_000) })
-  assert(measure("hashMap add"){ hashMap + (0 -> 0) } < measure("treeMap add"){ treeMap + (0 -> 0) })
-  assert(measure("hashMap min"){ hashMap.min } > measure("treeMap min"){ treeMap.min })
+  val testHashMapAndTreeMap: ((MeasurementResults[_], MeasurementResults[_]) => Boolean) => (Map[Int, Int] => _, String) => Unit
+    = testMeasurements[Map[Int, Int]](hashMap, "hashMap")(treeMap, "treeMap")
+  testHashMapAndTreeMap(_ < _)(_.contains(1_000_000), "lookup")
+  testHashMapAndTreeMap(_ < _)(_.+(0 -> 0), "add")
+  testHashMapAndTreeMap(_ > _)(_.min, "min")
 }
